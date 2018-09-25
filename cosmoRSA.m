@@ -1,4 +1,6 @@
 function cosmoRSA(subject, ds, timesphere, operation, single_or_mr)
+%% RSA example with a single prediction, partial correlation and multiple regression
+% Pedro Pinheiro-Chagas 2018
 
 % InitDirsMEGcalc
 InitDirsMEGcalc
@@ -18,8 +20,7 @@ nbrhood=cosmo_interval_neighborhood(ds,'time','radius',timesphere); % to calcula
 
 %% Load matrices
 % set measure
-load([rsa_result_dir 'stim_matrices/calc_RDM_matrices.mat'])
-%load([rsa_result_dir 'stim_matrices/calc_RDM_matrices_cres_3456.mat'])
+load([data_root_dir '/calc_RDM_matrices.mat'], 'RDM')
 
 %% run RSA
 measure_args=struct();
@@ -54,27 +55,78 @@ if strcmp(single_or_mr, 'mr') == 1
     
 %% Single regressions
 else
-    measure_args=struct();
-    measure_args.type='Spearman'; %correlation type between target and MEG dsms
-    measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
-    measure_args.center_data=true; %removes the mean pattern before correlating
-   
-    %% Operator model regressing out results magnitude
-    measure_args=struct();
+measure_args=struct();
     measure_args.type='Spearman'; %correlation type between target and MEG dsms
     measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
     measure_args.center_data=true; %removes the mean pattern before correlating
     
-    disp('processing RSA of operator_reg_result_mag');
-    measure_args.target_dsm = RDM.operator;
-    measure_args.regress_dsm = RDM.result_mag;
-    RSA.operator_reg_result_mag = cosmo_searchlight(ds,nbrhood,measure,measure_args);
-    measure_args = rmfield(measure_args,'regress_dsm');
+%     predictors = {'operator', 'op1_mag', 'op1_vis', 'op2_mag', 'op2_vis', 'result_mag', 'result_vis'};
+    predictors = {'op2_mag'};
+
+    % Run RSA
+    RSA = [];
+    for i = 1:length(predictors)
+        disp(['processing RSA of ' (predictors{i})]);
+        measure_args.target_dsm = RDM.(predictors{i});
+        RSA.(predictors{i}) = cosmo_searchlight(ds,nbrhood,measure,measure_args);
+    end
+    
+%     % Magnitude models regressing out visual models
+%     measure_args=struct();
+%     measure_args.type='Spearman'; %correlation type between target and MEG dsms
+%     measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
+%     measure_args.center_data=true; %removes the mean pattern before correlating
+%     
+%     RDM_mag_vis = {'op1_mag', 'op1_vis', 'op2_mag', 'op2_vis', 'result_mag', 'result_vis'};
+%     for i = 1:2:length(RDM_mag_vis)
+%         disp(['processing RSA of ' [RDM_mag_vis{i} '_reg_' RDM_mag_vis{i+1}]]);
+%         measure_args.target_dsm = RDM.(RDM_mag_vis{i});
+%         measure_args.regress_dsm = RDM.(RDM_mag_vis{i+1});
+%         RSA.([RDM_mag_vis{i} 'reg' RDM_mag_vis{i+1}]) = cosmo_searchlight(ds,nbrhood,measure,measure_args);
+%         measure_args = rmfield(measure_args,'regress_dsm');
+%     end
+%     
+%     % Visual models regressing out magnitude models
+%     measure_args=struct();
+%     measure_args.type='Spearman'; %correlation type between target and MEG dsms
+%     measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
+%     measure_args.center_data=true; %removes the mean pattern before correlating
+%     
+%     for i = 2:2:length(RDM_mag_vis)
+%         disp(['processing RSA of ' [RDM_mag_vis{i} '_reg_' RDM_mag_vis{i-1}]]);
+%         measure_args.target_dsm = RDM.(RDM_mag_vis{i});
+%         measure_args.regress_dsm = RDM.(RDM_mag_vis{i-1});
+%         RSA.([RDM_mag_vis{i} 'reg' RDM_mag_vis{i-1}]) = cosmo_searchlight(ds,nbrhood,measure,measure_args);
+%         measure_args = rmfield(measure_args,'regress_dsm');
+%     end
+%     
+%     % Results model regressing out operator
+%     measure_args=struct();
+%     measure_args.type='Spearman'; %correlation type between target and MEG dsms
+%     measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
+%     measure_args.center_data=true; %removes the mean pattern before correlating
+%     
+%     disp('processing RSA of result_reg_operator');
+%     measure_args.target_dsm = RDM.result_mag;
+%     measure_args.regress_dsm = RDM.operator;
+%     RSA.result_mag_reg_operator = cosmo_searchlight(ds,nbrhood,measure,measure_args);
+%     measure_args = rmfield(measure_args,'regress_dsm');
+%     
+%     % Operator model regressing out results magnitude
+%     measure_args=struct();
+%     measure_args.type='Spearman'; %correlation type between target and MEG dsms
+%     measure_args.metric='Spearman'; %metric to use to compute MEG dsm % mahalanobis
+%     measure_args.center_data=true; %removes the mean pattern before correlating
+%     
+%     disp('processing RSA of operator_reg_result_mag');
+%     measure_args.target_dsm = RDM.operator;
+%     measure_args.regress_dsm = RDM.result_mag;
+%     RSA.operator_reg_result_mag = cosmo_searchlight(ds,nbrhood,measure,measure_args);
+%     measure_args = rmfield(measure_args,'regress_dsm');
     
     %% Save
-    save([rsa_result_dir 'RSA_all_DSM_' operation '_tbin' num2str(timesphere) '_' subject '_operator_reg_result.mat'], 'RSA')
+    save([rsa_result_dir 'RSA_all_DSM_' operation '_tbin' num2str(timesphere) '_' subject '_reg_result.mat'], 'RSA')
 end
-
 
 end
 

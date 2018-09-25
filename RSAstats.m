@@ -1,10 +1,7 @@
-function RSAstats(RSA_all, RSA_model)
-%% Sample code for Significance Testing for RSA in Cosmo
-% Lina Teichmann
-% May 2017
-%**************************************************************************
-% Add CosmoMVPA to path & clear variables before running
-%**************************************************************************
+function RSAres = RSAstats(RSA_all, RSA_model)
+%% Sample code for statistical testing for RSA
+% Pedro Pinheiro-Chagas 2018
+
 InitDirsMEGcalc
 
 ds_stacked_RSA = cosmo_stack(RSA_all);
@@ -33,9 +30,7 @@ RSAres.timevect = timevect;
 RSAres.opt = opt;
 
 %% Save results
-%save([rsa_result_dir '/group_rsa_mr_searchlight/RSA_stats_model_', RSA_model, 'all_DSM_MR_searchlight.mat'], 'RSAres');
-save([rsa_result_dir '/group_rsa_mr/RSA_stats_model_', RSA_model, '_all_DSM_MR_operator_reg_result.mat'], 'RSAres');
-%save([rsa_result_dir '/group_rsa/RSA_stats_model_', RSA_model, '_all_DSM.mat'], 'RSAres');
+save([rsa_result_dir '/RSA_stats_model_', RSA_model, '_all_DSM_MR_reg_result.mat'], 'RSAres');
 
 end
 
